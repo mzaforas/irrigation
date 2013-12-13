@@ -4,15 +4,12 @@
 
 import os
 import os.path
-import datetime
-import time
 import arrow
 import requests
 from requests.exceptions import ConnectionError
 
 
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
-from werkzeug import secure_filename
 
 
 # app instance
@@ -65,7 +62,8 @@ def send_command(seconds):
 
 def log(seconds):
     # TODO: log in DB
-    pass
+    print arrow.now()
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
