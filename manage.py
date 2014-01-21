@@ -8,6 +8,7 @@ from irrigation import app, irrigate_plant
 
 manager = Manager(app)
 
+
 @manager.option('-s', '--seconds', help='Irrigation seconds', default=10)
 def irrigate(seconds):
     """Irrigate N seconds """

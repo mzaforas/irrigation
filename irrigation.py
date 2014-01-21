@@ -8,7 +8,6 @@ import arrow
 import requests
 from requests.exceptions import ConnectionError
 
-
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 
 
@@ -49,11 +48,11 @@ def irrigate_plant(seconds):
         send_command(seconds)
         log(seconds)
     except ConnectionError:
-        print "Error de conexión"
+        app.logger.error('Error de conexión')
 
 
 def send_command(seconds):
-    print 'send_command', seconds
+    app.logger.info('send_command %d', seconds)
     irrigation_params = {'seconds': seconds}
     r = requests.get(IRRIGATION_ENDPOINT, params=irrigation_params)
     if r.status_code != 200:
@@ -62,7 +61,7 @@ def send_command(seconds):
 
 def log(seconds):
     # TODO: log in DB
-    print arrow.now()
+    app.logger.info(arrow.now())
 
 
 if __name__ == "__main__":
