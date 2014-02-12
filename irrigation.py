@@ -61,10 +61,13 @@ def irrigate_plant(seconds):
 def send_command(seconds):
     app.logger.info('send_command %d', seconds)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(('pump', 80))
-    s.sendall(chr(seconds))
-    s.close()
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('pump', 80))
+        s.sendall(chr(seconds))
+        s.close()
+    except (socket.error, socket.herror, socket.gaierror, socket.timeout):
+        raise ConnectionError
 
     # HTTP version not used
     # irrigation_params = {'seconds': seconds}
