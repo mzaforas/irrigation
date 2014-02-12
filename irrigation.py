@@ -20,7 +20,7 @@ SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
 DATABASE = os.path.join(app.root_path, 'db/irrigation.db')
-IRRIGATION_ENDPOINT = "http://192.168.1.11/irrigate"
+IRRIGATION_ENDPOINT = "http://pump/irrigate"
 
 app.config.from_object(__name__)
 
@@ -35,8 +35,12 @@ def index():
 def irrigate():
     seconds = request.form['seconds']
     if seconds.isdigit():
-        irrigate_plant(int(seconds))
-        flash(u'Enviada orden de riego durante {seconds} segundos'.format(seconds=seconds), category='success')
+        try:
+            irrigate_plant(int(seconds))
+        except ConnectionError:
+            flash(u'Error de conexión enviando orden de riego', category='danger')
+        else:
+            flash(u'Enviada orden de riego durante {seconds} segundos'.format(seconds=seconds), category='success')
     else:
         flash(u'Número de segundos de riego debe ser un entero', category='danger')
     return redirect(url_for('index'))
@@ -48,7 +52,9 @@ def irrigate_plant(seconds):
         send_command(seconds)
         log(seconds)
     except ConnectionError:
-        app.logger.error('Error de conexión')
+        app.logger.error('Error de conexión %s' % arrow.now().format('YYYY-MM-DD HH:mm'))
+        raise
+    
 
 
 def send_command(seconds):
@@ -61,7 +67,7 @@ def send_command(seconds):
 
 def log(seconds):
     # TODO: log in DB
-    app.logger.info(arrow.now())
+    app.logger.info(arrow.now().format('YYYY-MM-DD HH:mm'))
 
 
 if __name__ == "__main__":
