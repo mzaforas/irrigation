@@ -2,6 +2,8 @@
 
 # all the imports
 
+import socket
+import struct
 import os
 import os.path
 import arrow
@@ -59,10 +61,13 @@ def irrigate_plant(seconds):
 
 def send_command(seconds):
     app.logger.info('send_command %d', seconds)
-    irrigation_params = {'seconds': seconds}
-    r = requests.get(IRRIGATION_ENDPOINT, params=irrigation_params)
-    if r.status_code != 200:
-        raise ConnectionError
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(('pump', 80))
+    s.sendall(chr(seconds))
+    # irrigation_params = {'seconds': seconds}
+    # r = requests.get(IRRIGATION_ENDPOINT, params=irrigation_params)
+    # if r.status_code != 200:
+    #     raise ConnectionError
 
 
 def log(seconds):
