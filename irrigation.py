@@ -58,12 +58,15 @@ def irrigate_plant(seconds):
         raise
     
 
-
 def send_command(seconds):
     app.logger.info('send_command %d', seconds)
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('pump', 80))
     s.sendall(chr(seconds))
+    s.close()
+
+    # HTTP version not used
     # irrigation_params = {'seconds': seconds}
     # r = requests.get(IRRIGATION_ENDPOINT, params=irrigation_params)
     # if r.status_code != 200:
