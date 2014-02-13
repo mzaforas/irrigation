@@ -9,7 +9,7 @@
 	  </select>
 	</div>
 	<div class="form-group">
-          <input type="number" class="form-control" name="seconds" id="seconds" placeholder="Segundos">
+          <input type="number" min="0" class="form-control" name="seconds" id="seconds" placeholder="Segundos">
         </div>
         <button type="submit" class="btn btn-info">Riega!</button>
     </form>
@@ -20,15 +20,21 @@
 <th>Timestamp</th>
 <th>Status</th>
 <th>Seconds</th>
-<th>Node</th>
+<!--<th>Node</th>-->
 </thead>
 <tbody>
 {% for log in logs %}
 <tr>
 <td>{{ log.0 }}</td>
-<td>{{ log.1 }}</td>
+<td>
+{% if log.1 == 1 %}
+<span class="glyphicon glyphicon-ok-circle"></span>
+{% else %}
+<span class="glyphicon glyphicon-exclamation-sign"></span>
+{% endif %}
+</td>
 <td>{{ log.2 }}</td>
-<td>{{ log.3 }}</td>
+<!--<td>{{ log.3 }}</td>-->
 </tr>
 {% endfor %}
 </tbody>

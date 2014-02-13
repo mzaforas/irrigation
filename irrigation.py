@@ -27,6 +27,9 @@ DATABASE = os.path.join(app.root_path, 'db/irrigation.db')
 
 IRRIGATION_ENDPOINT = "http://azalea/irrigate"
 
+STATUS_OK = 1
+STATUS_ERROR = 0
+
 app.config.from_object(__name__)
 
 
@@ -35,7 +38,8 @@ app.config.from_object(__name__)
 def index():
     db_conn = getattr(g, 'db_conn', None)
     cursor = db_conn.cursor()
-    logs = cursor.execute('select timestamp, status, irrigation_seconds, node_id from logs').fetchall()
+
+    logs = cursor.execute('select datetime(timestamp, "unixepoch"), status, irrigation_seconds, node_id from logs order by timestamp limit 10').fetchall()
 
     return render_template('index.html', logs=logs)
 
@@ -59,9 +63,10 @@ def irrigate():
 def irrigate_plant(seconds):
     try:
         send_command(seconds)
-        log(seconds)
+        log(seconds, status=STATUS_OK)
     except ConnectionError:
         app.logger.error('Error de conexión %s' % arrow.now().format('YYYY-MM-DD HH:mm'))
+        log(seconds, status=STATUS_ERROR)
         raise
     
 
@@ -83,14 +88,14 @@ def send_command(seconds):
     #     raise ConnectionError
 
 
-def log(seconds):
+def log(seconds, status):
     now = arrow.now()
 
     app.logger.info(now.format('YYYY-MM-DD HH:mm'))
 
     db_conn = getattr(g, 'db_conn', None)
     cursor = db_conn.cursor()
-    cursor.execute('insert into logs (timestamp, status, irrigation_seconds, node_id) values (?, ?, ?, ?)', (now.timestamp, 1, seconds, 1))
+    cursor.execute('insert into logs (timestamp, status, irrigation_seconds, node_id) values (?, ?, ?, ?)', (now.timestamp, status, seconds, 1))
     db_conn.commit()
 
 
