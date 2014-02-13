@@ -9,6 +9,8 @@ import os.path
 import arrow
 import requests
 from requests.exceptions import ConnectionError
+from contextlib import closing
+import sqlite3
 
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 
@@ -22,7 +24,8 @@ SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'default'
 DATABASE = os.path.join(app.root_path, 'db/irrigation.db')
-IRRIGATION_ENDPOINT = "http://pump/irrigate"
+
+IRRIGATION_ENDPOINT = "http://azalea/irrigate"
 
 app.config.from_object(__name__)
 
@@ -30,7 +33,11 @@ app.config.from_object(__name__)
 # controllers
 @app.route("/")
 def index():
-    return render_template('index.html')
+    db_conn = getattr(g, 'db_conn', None)
+    cursor = db_conn.cursor()
+    logs = cursor.execute('select timestamp, status, irrigation_seconds, node_id from logs').fetchall()
+
+    return render_template('index.html', logs=logs)
 
 
 @app.route("/irrigate", methods=['POST'])
@@ -63,7 +70,7 @@ def send_command(seconds):
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('pump', 80))
+        s.connect(('azalea', 80))
         s.sendall(chr(seconds))
         s.close()
     except (socket.error, socket.herror, socket.gaierror, socket.timeout):
@@ -77,8 +84,37 @@ def send_command(seconds):
 
 
 def log(seconds):
-    # TODO: log in DB
-    app.logger.info(arrow.now().format('YYYY-MM-DD HH:mm'))
+    now = arrow.now()
+
+    app.logger.info(now.format('YYYY-MM-DD HH:mm'))
+
+    db_conn = getattr(g, 'db_conn', None)
+    cursor = db_conn.cursor()
+    cursor.execute('insert into logs (timestamp, status, irrigation_seconds, node_id) values (?, ?, ?, ?)', (now.timestamp, 1, seconds, 1))
+    db_conn.commit()
+
+
+@app.before_request
+def before_request():
+    g.db_conn = connect_db(app)
+
+
+@app.teardown_request
+def teardown_request(exception):
+    db_conn = getattr(g, 'db_conn', None)
+    if db_conn is not None:
+        db_conn.close()
+
+# DB auxiliar functions
+def connect_db(app):
+    return sqlite3.connect(app.config['DATABASE'])
+
+
+def init_db(app):
+    with closing(connect_db(app)) as db:
+        with app.open_resource('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
 
 
 if __name__ == "__main__":
