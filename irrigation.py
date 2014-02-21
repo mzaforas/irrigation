@@ -39,7 +39,7 @@ def index():
     db_conn = getattr(g, 'db_conn', None)
     cursor = db_conn.cursor()
 
-    logs = cursor.execute('select datetime(timestamp, "unixepoch"), status, irrigation_seconds, node_id from logs order by timestamp limit 10').fetchall()
+    logs = cursor.execute('select datetime(timestamp, "unixepoch", "localtime"), status, irrigation_seconds, node_id from logs order by timestamp desc limit 10').fetchall()
 
     nodes = cursor.execute('select id, name, frequency, seconds from nodes').fetchall()
 
@@ -96,10 +96,17 @@ def log(seconds, status):
     app.logger.info(now.format('YYYY-MM-DD HH:mm'))
 
     db_conn = getattr(g, 'db_conn', None)
+    if db_conn is None:
+        db_conn = connect_db(app)
+
     cursor = db_conn.cursor()
     cursor.execute('insert into logs (timestamp, status, irrigation_seconds, node_id) values (?, ?, ?, ?)',
                    (now.timestamp, status, seconds, 1))
     db_conn.commit()
+ 
+    if db_conn is not None:
+        db_conn.close()
+
 
 @app.route("/update-node", methods=['POST'])
 def update_node():
@@ -117,6 +124,7 @@ def update_node():
     flash(u'Parámetros de riego de "{}" actualizados a {} veces al día durante {} segundos'
           .format(name, frequency, seconds), category='success')
     return redirect(url_for('index'))
+
 
 @app.before_request
 def before_request():
