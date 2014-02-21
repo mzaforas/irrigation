@@ -5,7 +5,9 @@
     <form role="form" action="{{ url_for('irrigate') }}" method="post" class="form-inline">
         <div class="form-group">
 	  <select class="form-control">
-	    <option>Azalea</option>
+          {% for node in nodes %}
+	        <option value="{{ node.0 }}">{{ node.1 }}</option>
+          {% endfor %}
 	  </select>
 	</div>
 	<div class="form-group">
@@ -15,29 +17,60 @@
     </form>
 </div>
 
-<table class="table table-striped table-condensed table-responsive">
-<thead>
-<th>Timestamp</th>
-<th>Status</th>
-<th>Seconds</th>
-<!--<th>Node</th>-->
-</thead>
-<tbody>
-{% for log in logs %}
-<tr>
-<td>{{ log.0 }}</td>
-<td>
-{% if log.1 == 1 %}
-<span class="glyphicon glyphicon-ok-circle"></span>
-{% else %}
-<span class="glyphicon glyphicon-exclamation-sign"></span>
-{% endif %}
-</td>
-<td>{{ log.2 }}</td>
-<!--<td>{{ log.3 }}</td>-->
-</tr>
+<div class="row">
+{% for node in nodes %}
+    <div class="col-lg-3 well">
+      <h2>{{ node.1|capitalize }}</h2>
+      <form role="form" action="{{ url_for('update_node') }}" method="post">
+
+        <input type="hidden" name="id" value="{{ node.0 }}">
+        <input type="hidden" name="name" value="{{ node.1 }}">
+
+        <div class="form-group">
+            <label for="frequency">Frecuencia</label>
+            <div>
+              <input type="number" min="0" max="6" step="2" class="form-control" name="frequency" id="frequency" value="{{ node.2 }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="seconds">Segundos</label>
+            <div>
+              <input type="number" min="0" class="form-control" name="seconds" id="seconds" value="{{ node.3 }}">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Actualizar</button>
+      </form>
+    </div>
+
 {% endfor %}
-</tbody>
+</div>
+
+<hr>
+
+<table class="table table-striped table-condensed table-responsive">
+    <thead>
+        <th>Timestamp</th>
+        <th>Status</th>
+        <th>Seconds</th>
+        <!--<th>Node</th>-->
+    </thead>
+    <tbody>
+    {% for log in logs %}
+        <tr>
+            <td>{{ log.0 }}</td>
+            <td>
+            {% if log.1 == 1 %}
+                <span class="glyphicon glyphicon-ok-circle"></span>
+            {% else %}
+                <span class="glyphicon glyphicon-exclamation-sign"></span>
+            {% endif %}
+            </td>
+            <td>{{ log.2 }}</td>
+            <!--<td>{{ log.3 }}</td>-->
+        </tr>
+    {% endfor %}
+    </tbody>
 </table>
 
 {% endblock %}

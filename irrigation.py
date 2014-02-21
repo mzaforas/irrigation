@@ -41,7 +41,9 @@ def index():
 
     logs = cursor.execute('select datetime(timestamp, "unixepoch"), status, irrigation_seconds, node_id from logs order by timestamp limit 10').fetchall()
 
-    return render_template('index.html', logs=logs)
+    nodes = cursor.execute('select id, name, frequency, seconds from nodes').fetchall()
+
+    return render_template('index.html', logs=logs, nodes=nodes)
 
 
 @app.route("/irrigate", methods=['POST'])
@@ -95,9 +97,26 @@ def log(seconds, status):
 
     db_conn = getattr(g, 'db_conn', None)
     cursor = db_conn.cursor()
-    cursor.execute('insert into logs (timestamp, status, irrigation_seconds, node_id) values (?, ?, ?, ?)', (now.timestamp, status, seconds, 1))
+    cursor.execute('insert into logs (timestamp, status, irrigation_seconds, node_id) values (?, ?, ?, ?)',
+                   (now.timestamp, status, seconds, 1))
     db_conn.commit()
 
+@app.route("/update-node", methods=['POST'])
+def update_node():
+    node_id = request.form['id']
+    name = request.form['name']
+    frequency = request.form['frequency']
+    seconds = request.form['seconds']
+
+    db_conn = getattr(g, 'db_conn', None)
+    cursor = db_conn.cursor()
+    cursor.execute('update nodes set frequency=?, seconds=? where id=?',
+                   (frequency, seconds, node_id))
+    db_conn.commit()
+
+    flash(u'Parámetros de riego de "{}" actualizados a {} veces al día durante {} segundos'
+          .format(name, frequency, seconds), category='success')
+    return redirect(url_for('index'))
 
 @app.before_request
 def before_request():
@@ -109,6 +128,7 @@ def teardown_request(exception):
     db_conn = getattr(g, 'db_conn', None)
     if db_conn is not None:
         db_conn.close()
+
 
 # DB auxiliar functions
 def connect_db(app):
