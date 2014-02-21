@@ -4,9 +4,9 @@
 <div class="jumbotron">
     <form role="form" action="{{ url_for('irrigate') }}" method="post" class="form-inline">
         <div class="form-group">
-	  <select class="form-control">
+	  <select name="name" class="form-control">
           {% for node in nodes %}
-	        <option value="{{ node.0 }}">{{ node.1 }}</option>
+	        <option value="{{ node.1 }}">{{ node.1 }}</option>
           {% endfor %}
 	  </select>
 	</div>

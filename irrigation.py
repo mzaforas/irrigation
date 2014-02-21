@@ -49,35 +49,37 @@ def index():
 @app.route("/irrigate", methods=['POST'])
 def irrigate():
     seconds = request.form['seconds']
+    name = request.form['name']
+
     if seconds.isdigit():
         try:
-            irrigate_plant(int(seconds))
+            irrigate_plant(name, int(seconds))
         except ConnectionError:
-            flash(u'Error de conexión enviando orden de riego', category='danger')
+            flash(u'Error de conexión enviando orden de riego a {}'.format(name), category='danger')
         else:
-            flash(u'Enviada orden de riego durante {seconds} segundos'.format(seconds=seconds), category='success')
+            flash(u'Enviada orden de riego a {} durante {} segundos'.format(name, seconds), category='success')
     else:
         flash(u'Número de segundos de riego debe ser un entero', category='danger')
     return redirect(url_for('index'))
 
 
 # aux functions
-def irrigate_plant(seconds):
+def irrigate_plant(node_name, seconds):
     try:
-        send_command(seconds)
+        send_command(node_name, seconds)
         log(seconds, status=STATUS_OK)
     except ConnectionError:
-        app.logger.error('Error de conexión %s' % arrow.now().format('YYYY-MM-DD HH:mm'))
+        app.logger.error('[{}] Connection error'.format(arrow.now().format('YYYY-MM-DD HH:mm')))
         log(seconds, status=STATUS_ERROR)
         raise
     
 
-def send_command(seconds):
-    app.logger.info('send_command %d', seconds)
+def send_command(host, seconds):
+    app.logger.info('send_command %s %d', host, seconds)
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('azalea', 80))
+        s.connect((host, 80))
         s.sendall(chr(seconds))
         s.close()
     except (socket.error, socket.herror, socket.gaierror, socket.timeout):
@@ -93,7 +95,7 @@ def send_command(seconds):
 def log(seconds, status):
     now = arrow.now()
 
-    app.logger.info(now.format('YYYY-MM-DD HH:mm'))
+    app.logger.info('[{}] Write log in DB'.format(now.format('YYYY-MM-DD HH:mm')))
 
     db_conn = getattr(g, 'db_conn', None)
     if db_conn is None:
