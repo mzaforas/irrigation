@@ -2,12 +2,11 @@
 
 # all the imports
 
+import logging
 import socket
-import struct
 import os
 import os.path
 import arrow
-import requests
 from requests.exceptions import ConnectionError
 from contextlib import closing
 import sqlite3
@@ -25,10 +24,14 @@ USERNAME = 'admin'
 PASSWORD = 'default'
 DATABASE = os.path.join(app.root_path, 'db/irrigation.db')
 
-IRRIGATION_ENDPOINT = "http://azalea/irrigate"
-
 STATUS_OK = 1
 STATUS_ERROR = 0
+
+file_handler = logging.FileHandler(os.path.join(app.root_path, 'log/irrigation.log'))
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+
+app.logger.addHandler(file_handler)
 
 app.config.from_object(__name__)
 
