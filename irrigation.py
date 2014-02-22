@@ -116,7 +116,6 @@ def log(seconds, status):
 @app.route("/update-node", methods=['POST'])
 def update_node():
     node_id = request.form['id']
-    name = request.form['name']
     frequency = request.form['frequency']
     seconds = request.form['seconds']
 
@@ -126,8 +125,8 @@ def update_node():
                    (frequency, seconds, node_id))
     db_conn.commit()
 
-    flash(u'Parámetros de riego de "{}" actualizados a {} veces al día durante {} segundos'
-          .format(name, frequency, seconds), category='success')
+    flash(u'Parámetros de riego actualizados a <b>{}</b> veces al día durante <b>{}</b> segundos'
+          .format(frequency, seconds), category='success')
     return redirect(url_for('index'))
 
 

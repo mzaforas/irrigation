@@ -19,31 +19,45 @@
 
 <div class="row">
 {% for node in nodes %}
-    <div class="col-lg-3 well">
-      <h2>{{ node.1|capitalize }}</h2>
-      <form role="form" action="{{ url_for('update_node') }}" method="post">
+    <div class="col-lg-2">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">{{ node.1|capitalize }}</h3>
+            </div>
+            <div class="panel-body">
+                <p>Frecuencia: <b>{{ node.2 }}</b></p>
+                <p>Segundos: <b>{{ node.3 }}</b></p>
+            </div>
+        </div>
+    </div>
+{% endfor %}
 
-        <input type="hidden" name="id" value="{{ node.0 }}">
-        <input type="hidden" name="name" value="{{ node.1 }}">
+<div class="col-lg-2 well">
+        <form role="form" action="{{ url_for('update_node') }}" method="post">
 
         <div class="form-group">
-            <label for="frequency">Frecuencia</label>
+        <select name="id" class="form-control">
+          {% for node in nodes %}
+	        <option value="{{ node.0 }}">{{ node.1 }}</option>
+          {% endfor %}
+	    </select>
+        </div>
+
+        <div class="form-group">
             <div>
-              <input type="number" min="0" max="6" step="2" class="form-control" name="frequency" id="frequency" value="{{ node.2 }}">
+              <input type="number" min="0" max="6" step="2" class="form-control" name="frequency" id="frequency" placeholder="Frecuencia">
             </div>
         </div>
 
         <div class="form-group">
-            <label for="seconds">Segundos</label>
             <div>
-              <input type="number" min="0" class="form-control" name="seconds" id="seconds" value="{{ node.3 }}">
+              <input type="number" min="0" class="form-control" name="seconds" id="seconds" placeholder="Segundos">
             </div>
         </div>
         <button type="submit" class="btn btn-success">Actualizar</button>
       </form>
-    </div>
 
-{% endfor %}
+</div>
 </div>
 
 <hr>
